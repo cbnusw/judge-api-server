@@ -67,6 +67,12 @@ const enrollContest = asyncHandler(async (req, res, next) => {
     if (userId == ObjectId(`${students.attendedStudents[student]}`).toString())
       return next(CONTEST_USER_DUPLICATED);
   }
+  const userAttended = await UserAttend.find({ 'userInfo': userId }).select('_id');
+  if (!userAttended) await UserAttend.create({ 'userInfo': userId, 'attendedContest': [contestId] });
+  else await UserAttend.update(
+    { userInfo: `${userId}` },
+    { $push: { attendedContest: contestId } }
+  )
   await Contest.update(
     { _id: `${contestId}` },
     { $push: { attendedStudents: userId } }
@@ -82,6 +88,10 @@ const unenrollContest = asyncHandler(async (req, res, next) => {
     { _id: `${contestId}` },
     { $pull: { attendedStudents: userId } }
   );
+  await UserAttend.update(
+    { userInfo: `${userId}` },
+    { $pull: { attendedContest: contestId } }
+  )
   return res.json(createResponse(res));
 })
 

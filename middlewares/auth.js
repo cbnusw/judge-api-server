@@ -54,6 +54,10 @@ const hasPermission = permission => [
   isAuthenticated,
   (req, res, next) => _hasPermission(req.user, permission) ? next() : next(FORBIDDEN)
 ];
+const attended = permission => [
+  isAuthenticated,
+  (req, res, next) => _hasPermission(req.user, permission) ? next() : next(FORBIDDEN)
+];
 
 const hasSomePermissions = (...permissions) => [
   isAuthenticated,
@@ -65,11 +69,24 @@ const hasEveryPermissions = (...permissions) => [
   (req, res, next) => _hasEveryPermissions(req.user, ...permissions) ? next() : next(FORBIDDEN)
 ];
 
+const isAttended = asyncHandler(async (req, res, next) => {
+  const { query } = req;
+  const finded = Problem.find()
+    .where('_id').equal(query.problem)
+    .select('contest')
+  const finded2 = Problm.find()
+    .where('_id').equal(finded)
+    .select('attendedStudents')
+  if (finded2.includes(query.user)) next()
+  else next(FORBIDDEN)
+});
+
 exports.authenticate = authenticate;
 exports.isAuthenticated = isAuthenticated;
 exports.isOperator = hasRoles();
 exports.isStaff = hasRole('staff');
 exports.isStudent = hasRole('student');
+exports.isAttended = isAttended
 exports.hasRole = hasRole;
 exports.hasRoles = hasRoles;
 exports.hasPermission = hasPermission;

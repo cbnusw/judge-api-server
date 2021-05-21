@@ -5,9 +5,15 @@ const { toRegEx, toRef } = require('../../mappers');
 const toRegex = require('../../mappers/to-regex');
 
 const contentSchema = createSchema({
-  contentPDF: [{type:Schema.Types.ObjectId, ref: 'File'}],
-  ioSample: [{in:{type:Schema.Types.ObjectId, ref: 'File'}, out:{type:Schema.Types.ObjectId, ref: 'File'}}]
-},false)
+  contentPDF: [{ type: Schema.Types.ObjectId, ref: 'File' }],
+  ioSample: [{ in: { type: Schema.Types.ObjectId, ref: 'File' }, out: { type: Schema.Types.ObjectId, ref: 'File' } }]
+}, false)
+
+
+const optionSchema = createSchema({
+  max_real_time: { type: Number, required: true },
+  max_memory: { type: Number, required: true }
+}, false)
 
 const schema = createSchema({
   title: {
@@ -17,11 +23,13 @@ const schema = createSchema({
     index: true
   },
   content: contentSchema,
+  score: { type: Number, required: true },
   contest: {
     type: Schema.Types.ObjectId
   },
-  io: [{in:Schema.Types.ObjectId, out:Schema.Types.ObjectId}],//File URL
-  writer: Schema.Types.ObjectId
+  io: [{ in: Schema.Types.ObjectId, out: Schema.Types.ObjectId }],//File URL
+  writer: Schema.Types.ObjectId,
+  option: optionSchema
 })
 
 
