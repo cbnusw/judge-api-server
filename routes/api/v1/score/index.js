@@ -7,7 +7,8 @@ const router = Router();
 //목록
 //문제별 보기
 //사용자별 보기
-router.get('/', authenticate, controller.getScores);
+//router.get('/', authenticate, controller.getScores);
+router.get('/', controller.kafkaTest);
 router.post('/', isAttended, controller.createScore);
 
 module.exports = router;
