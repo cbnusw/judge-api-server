@@ -1,12 +1,18 @@
 const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
-const { toRegEx, toRef } = require('../../mappers');
 const { searchPlugin } = require('../../plugins');
+const { toRegEx, toRef } = require('../../mappers');
 
 const ioSchema = createSchema({
   inFile: String,   // input file url
   outFile: String,  // output file url
 });
+
+
+const optionsSchema = createSchema({
+  maxRealTime: { type: Number, required: true },
+  maxMemory: { type: Number, required: true }
+}, false)
 
 const schema = createSchema({
   title: {
@@ -24,12 +30,14 @@ const schema = createSchema({
     type: String,
     required: true,
   },
+  score: { type: Number, required: true },
   contest: {
     type: Schema.Types.ObjectId,
     ref: 'Contest',
     default: null,
   },
-  ioSet: [ioSchema],//File URL
+  ioSet: [ioSchema],
+  options: optionsSchema,
   writer: {
     type: Schema.Types.ObjectId,
     ref: 'UserInfo',
@@ -49,5 +57,6 @@ schema.plugin(searchPlugin({
     })
   }
 }));
+
 
 module.exports = schema;
