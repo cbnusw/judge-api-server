@@ -27,7 +27,6 @@ const getMyContests = asyncHandler(async (req, res, next) => {
 
 const getRegisteredContests = asyncHandler(async (req, res, next) => {
   const { query, user } = req;
-  console.log(user);
   const documents = await Contest.search(query, { contestants: user.info });
   res.json(createResponse(res, documents));
 });
