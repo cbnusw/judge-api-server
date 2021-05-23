@@ -36,4 +36,38 @@ schema.statics.findByUrl = function (url) {
   return this.findOne({ url });
 };
 
+schema.methods.validatePermission = async function (user) {
+
+  let userInfo;
+
+  if (user) {
+    const { UserInfo } = require('../');
+    userInfo = await UserInfo.findById(user.info);
+  }
+
+  // 파일이 문제 셋과 관련된 파일일 경우
+  if (this.refModel === 'Problem') {
+    const { Contest, Problem } = require('../');
+    const problem = await Problem.findById(this.ref);
+
+    if (!problem.contest) return true;
+
+    const contest = await Contest.findById(problem.contest);
+
+    if (!contest) return true;
+
+    if (!userInfo) return false;
+    if (contest.contestants.map(id => String(id)).indexOf(String(userInfo._id)) === -1) return false;
+    if (contest.testPeriod) {
+      let { start, end } = contest.testPeriod;
+      const now = new Date();
+      start = new Date(start);
+      end = new Date(end);
+      return now.getTime() >= start.getTime() && now.getTime() <= end.getTime();
+    }
+  }
+
+  return true;
+};
+
 module.exports = schema;

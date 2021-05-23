@@ -1,7 +1,20 @@
-const { Schema, Mongoose } = require('mongoose');
+const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
 const { searchPlugin } = require('../../plugins');
 const { toRegEx, toRef } = require('../../mappers');
+
+const periodSchema = createSchema({
+  start: {
+    type: Date,
+    index: true,
+    required: true,
+  },
+  end: {
+    type: Date,
+    index: true,
+    required: true,
+  },
+}, false);
 
 const schema = createSchema({
   title: {
@@ -10,32 +23,37 @@ const schema = createSchema({
     required: true,
     index: true,
   },
-  pictures: [{
-    type: Schema.Types.ObjectId,
-    ref: 'File'
-  }],
+  content: String,
   writer: {
     type: Schema.Types.ObjectId,
+    ref: 'UserInfo',
     required: true,
     index: true,
   },
-  content: String,
-  problems: [Schema.Types.ObjectId],
-  registerPeriod: {
-    from: Date,
-    to: Date
+  problems: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Problem',
+  }],
+  applyingPeriod: {
+    type: periodSchema,
+    default: null,
   },
-  progressPeriod: {
-    from : Date,
-    to: Date
+  testPeriod: {
+    type: periodSchema,
+    default: null,
   },
-  attendedStudents: [Schema.Types.ObjectId]
+  contestants: [{
+    type: Schema.Types.ObjectId,
+    ref: 'UserInfo',
+    required: true,
+  }]
 });
 
 schema.index({ createdAt: -1 });
 
 schema.plugin(searchPlugin({
   sort: '-createdAt',
+  populate: [{ path: 'writer' }],
   mapper: {
     title: toRegEx,
     writer: toRef('UserInfo', {

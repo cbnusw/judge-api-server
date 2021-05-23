@@ -1,28 +1,29 @@
 const asyncHandler = require('express-async-handler');
 const { parse } = require('url');
 const { join, basename } = require('path');
-const { createResponse } = require('../../utils/response');
-const { hasRoles } = require('../../utils/permission');
-const { File } = require('../../models/@main');
-const { removeFileByUrl: _removeFileByUrl, removeFileById: _removeFileById } = require('../../utils/file');
 const {
   ROOT_DIR,
-  UPLOAD_APP_HOST,
+  JUDGE_APP_HOST: HOST,
   UPLOAD_DIR,
 } = require('../../env');
+const { File } = require('../../models/@main');
 const {
-  FAIL_FILE_UPLOAD,
   FILE_NOT_FOUND,
+  FILE_NOT_UPLOADED,
   FORBIDDEN,
 } = require('../../errors');
+const { createResponse } = require('../../utils/response');
+const { removeFileByUrl: _removeFileByUrl, removeFileById: _removeFileById } = require('../../utils/file');
+const { hasRoles } = require('../../utils/permission');
+
 
 const uploadMiddleware = asyncHandler(async (req, res, next) => {
-  if (!req.file) return next(FAIL_FILE_UPLOAD);
+  if (!req.file) return next(FILE_NOT_UPLOADED);
 
   const { access = [] } = req.body || req.query || {};
 
   req.file = await File.create({
-    url: `${UPLOAD_APP_HOST}/${req.file.filename}`,
+    url: `${HOST}/${UPLOAD_DIR}/${req.file.filename}`,
     filename: req.file.originalname,
     mimetype: req.file.mimetype,
     size: req.file.size,
@@ -32,6 +33,7 @@ const uploadMiddleware = asyncHandler(async (req, res, next) => {
 
   next();
 });
+
 
 const download = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -44,12 +46,14 @@ const download = asyncHandler(async (req, res, next) => {
   res.download(filePath, file.filename);
 });
 
+
 const uploadFile = asyncHandler(async (req, res, next) => {
   const { file: data } = req;
   const { url } = data;
 
   res.json({ uploaded: true, url, error: null, data });
 });
+
 
 const removeFileByUrl = asyncHandler(async (req, res, next) => {
   const { url } = req.query;
@@ -58,12 +62,14 @@ const removeFileByUrl = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res));
 });
 
+
 const removeFileById = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
   await _removeFileById(req, id);
   res.json(createResponse(res));
 });
+
 
 exports.download = download;
 exports.uploadMiddleware = uploadMiddleware;

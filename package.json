@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "npx pm2 start config/pm2/pm2.config.js",
-    "stop": "npx pm2 del judge-api",
-    "dev": "npx nodemon index.js",
-    "clear:log": "npx rimraf logs"
+    "start": "pm2 start config/pm2/pm2.config.js",
+    "stop": "pm2 del judge-api",
+    "dev": "nodemon index.js",
+    "clear:log": "rimraf logs"
   },
   "keywords": [],
   "author": "",

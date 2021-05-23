@@ -28,7 +28,11 @@ const errors = {
   USER_PHONE_REQUIRED: [400, '사용자 연락처가 필요합니다.'],
   WRITER_INFO_REQUIRED: [400, '작성자 정보가 필요합니다.'],
   YEAR_MONTH_REQUIRED: [400, '연월 정보가 필요합니다.'],
-  CONTEST_USER_DUPLICATED : [400, '중복 신청입니다.'],
+  CONTEST_ENROLLED : [400, '이미 신청한 콘테스트입니다.'],
+  BEFORE_REGISTER_PERIOD: [400, '아직 신청기간이 아닙니다.'],
+  AFTER_REGISTER_PERIOD: [400, '신청기간이 지났습니다'],
+  AFTER_PROGRESS_PERIOD: [400, '이미 종료된 테스트입니다.'],
+  PROGRESSED_CONTEST: [400, '이미 진행된 테스트입니다.'],
 
   // 401 Errors
   ACCESS_TOKEN_EXPIRED: [401, '액세스 토큰이 만료되었습니다.'],

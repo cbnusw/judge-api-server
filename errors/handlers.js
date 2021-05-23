@@ -1,4 +1,5 @@
 const { NOT_FOUND } = require('./');
+const { error } = require('../utils/logger');
 
 const notFound = (req, res, next) => next(NOT_FOUND);
 const errorHandler = (err, req, res, next) => {
@@ -12,7 +13,7 @@ const errorHandler = (err, req, res, next) => {
     message: err.message
   };
 
-  errorLogger(`${err.status} - ${err.message}`);
+  error(`${err.status} - ${err.message}`);
   console.error(err);
   res.status(status).json(response);
 };

@@ -1,13 +1,12 @@
-const { Schema, Mongoose } = require('mongoose');
+const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
-const { searchPlugin } = require('../../plugins');
 const { toRegEx, toRef } = require('../../mappers');
-const toRegex = require('../../mappers/to-regex');
+const { searchPlugin } = require('../../plugins');
 
-const contentSchema = createSchema({
-  contentPDF: [{type:Schema.Types.ObjectId, ref: 'File'}],
-  ioSample: [{in:{type:Schema.Types.ObjectId, ref: 'File'}, out:{type:Schema.Types.ObjectId, ref: 'File'}}]
-},false)
+const ioSchema = createSchema({
+  inFile: String,   // input file url
+  outFile: String,  // output file url
+});
 
 const schema = createSchema({
   title: {
@@ -16,14 +15,27 @@ const schema = createSchema({
     required: true,
     index: true
   },
-  content: contentSchema,
-  contest: {
-    type: Schema.Types.ObjectId
+  open: {
+    type: Boolean,
+    default: false,
+    index: true,
   },
-  io: [{in:Schema.Types.ObjectId, out:Schema.Types.ObjectId}],//File URL
-  writer: Schema.Types.ObjectId
-})
-
+  content: {
+    type: String,
+    required: true,
+  },
+  contest: {
+    type: Schema.Types.ObjectId,
+    ref: 'Contest',
+    default: null,
+  },
+  ioSet: [ioSchema],//File URL
+  writer: {
+    type: Schema.Types.ObjectId,
+    ref: 'UserInfo',
+    index: true,
+  }
+});
 
 schema.plugin(searchPlugin({
   sort: 'no',
@@ -33,10 +45,9 @@ schema.plugin(searchPlugin({
       title: toRegEx
     }),
     writer: toRef('UserInfo', {
-      name: toRegex
+      name: toRegEx
     })
   }
 }));
-
 
 module.exports = schema;

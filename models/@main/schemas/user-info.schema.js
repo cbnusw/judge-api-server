@@ -1,9 +1,6 @@
-const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
-const { searchPlugin } = require('../../plugins');
-const { to, toRegEx } = require('../../mappers');
 const roleSchema = require('./common/role.schema');
-const { CENTERS } = require('../../../constants');
+const { CENTERS, PERMISSIONS } = require('../../../constants');
 
 const schema = createSchema({
   image: String,
@@ -43,6 +40,11 @@ const schema = createSchema({
   },
   position: String,
   role: { ...roleSchema, index: true },
+  permissions: [{
+    type: String,
+    enum: PERMISSIONS,
+    required: true,
+  }],
 }, {
   createdAt: 'joinedAt'
 });
