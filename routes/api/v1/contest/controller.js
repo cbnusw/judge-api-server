@@ -25,6 +25,13 @@ const getMyContests = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, documents));
 });
 
+const getRegisteredContests = asyncHandler(async (req, res, next) => {
+  const { query, user } = req;
+  console.log(user);
+  const documents = await Contest.search(query, { contestants: user.info });
+  res.json(createResponse(res, documents));
+});
+
 const getApplyingContests = asyncHandler(async (req, res, next) => {
   const now = new Date();
 
@@ -143,6 +150,7 @@ const removeContest = asyncHandler(async (req, res, next) => {
 
 exports.getContests = getContests;
 exports.getMyContests = getMyContests;
+exports.getRegisteredContests = getRegisteredContests;
 exports.getApplyingContests = getApplyingContests;
 exports.getContest = getContest;
 exports.createContest = createContest;
