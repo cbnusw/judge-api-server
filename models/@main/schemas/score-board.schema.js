@@ -1,50 +1,44 @@
-const { Schema, Mongoose } = require('mongoose');
+const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
 const { searchPlugin } = require('../../plugins');
 const { toRegEx, toRef } = require('../../mappers');
 
-const schema = createSchema({
+const scoreSchema = createSchema({
   problem: {
     type: Schema.Types.ObjectId,
-    required: true,
-    index: true,
     ref: 'Problem'
   },
+  idCorrect: {
+    type: Boolean,
+    default: false,
+  },
+  tries: {
+    type: Number,
+    default: 0,
+  },
+  time: {
+    type: Number,
+    default: 0,
+  }
+}, false);
+
+const schema = createSchema({
+  contest: {
+    type: Schema.Types.ObjectId,
+    ref: 'Contest',
+    index: true,
+    required: true,
+  },
+  scores: [scoreSchema],
   user: {
     type: Schema.Types.ObjectId,
     ref: 'UserInfo',
     required: true,
-    index: true,
-  },
-  score: {
-    type: Number,
-    required: true,
-    default: -1
-  },
-  error: {
-    type: Number,
-  },
-  realTime: {
-    type: Number
-  },
-  memory: {
-    type: Number
-  },
-  try: { type: Number, default: 0 },
-  started: { type: Date },
-  solvedTime: { type: Date },
-  source: {
-    type: Schema.Types.ObjectId,
-    ref: 'File',
-    required: true
-  },
-  lang: {
-    type: String,
-    enum: ['C/C++', 'Python', 'JAVA']
   }
 });
 
 schema.index({ createdAt: -1 });
+schema.index({ contest: 1, user: 1 }, { unique: true });
 
 schema.plugin(searchPlugin({
   sort: '-score',

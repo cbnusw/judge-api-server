@@ -16,7 +16,18 @@ const permissions = [
 ];
 
 const fileTypes = [
-  'Problem',
+  'Problem', 'Submit'
+];
+
+const programmingLanguages = [
+  'c',
+  'c++',
+  'java',
+  'python2',
+  'python3',
+  'kotlin',
+  'go',
+  'node',
 ];
 
 const centers = [
@@ -35,3 +46,4 @@ exports.ROLES = roles;
 exports.PERMISSIONS = permissions;
 exports.CENTERS = centers;
 exports.FILE_TYPES = fileTypes;
+exports.PROGRAMMING_LANGUAGES = programmingLanguages;

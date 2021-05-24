@@ -30,7 +30,13 @@ const createScore = asyncHandler(async (req, res, next) => {
   const problemInfo = await Problem.find()
     .where('_id').equals(body.problem)
     .select('option io')
-  const judgeReq = { option: problemInfo.option, in: problemInfo.io.map(res => res.in), out: problemInfo.io.map(res => res.out), source: body.source, lang: body.lang }
+  const judgeReq = {
+    option: problemInfo.option,
+    in: problemInfo.io.map(res => res.in),
+    out: problemInfo.io.map(res => res.out),
+    source: body.source,
+    lang: body.lang
+  }
   const judgeRes = {} //kafka로 judgeReq 제출 후 결과 수신하는 변수
   body.error = judgeRes.status.result
   body.realtime = judgeRes.status.real_time
@@ -38,7 +44,6 @@ const createScore = asyncHandler(async (req, res, next) => {
   const doc = await Score.create(body);
   res.json(createResponse(res, doc));
 });
-
 
 
 exports.getScores = getScores;

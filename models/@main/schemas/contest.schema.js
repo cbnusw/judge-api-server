@@ -16,6 +16,17 @@ const periodSchema = createSchema({
   },
 }, false);
 
+const problemSchema = createSchema({
+  score: {
+    type: Number,
+    default: 1,
+  },
+  problem: {
+    type: Schema.Types.ObjectId,
+    ref: 'Problem',
+  }
+});
+
 const schema = createSchema({
   title: {
     type: String,
@@ -30,17 +41,14 @@ const schema = createSchema({
     required: true,
     index: true,
   },
-  problems: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Problem',
-  }],
+  problems: [problemSchema],
   applyingPeriod: {
     type: periodSchema,
     default: null,
   },
   testPeriod: {
     type: periodSchema,
-    default: null,
+    required: true,
   },
   contestants: [{
     type: Schema.Types.ObjectId,
