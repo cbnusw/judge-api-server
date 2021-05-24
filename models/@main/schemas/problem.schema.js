@@ -9,8 +9,14 @@ const ioSchema = createSchema({
 });
 
 const optionsSchema = createSchema({
-  maxRealTime: { type: Number, required: true },
-  maxMemory: { type: Number, required: true },
+  maxRealTime: {
+    type: Number,
+    default: null
+  },
+  maxMemory: {
+    type: Number,
+    default: null
+  },
 }, false);
 
 const schema = createSchema({
@@ -20,11 +26,6 @@ const schema = createSchema({
     required: true,
     index: true
   },
-  openedAt: {
-    type: Date,
-    index: true,
-    default: null,
-  },
   content: {
     type: String,
     required: true,
@@ -32,6 +33,11 @@ const schema = createSchema({
   contest: {
     type: Schema.Types.ObjectId,
     ref: 'Contest',
+    index: true,
+    default: null,
+  },
+  published: {
+    type: Date,
     index: true,
     default: null,
   },
@@ -45,7 +51,7 @@ const schema = createSchema({
 });
 
 schema.plugin(searchPlugin({
-  sort: 'no',
+  sort: '-createdAt',
   mapper: {
     title: toRegEx,
     contest: toRef('Contest', {
