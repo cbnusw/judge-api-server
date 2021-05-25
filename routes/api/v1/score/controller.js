@@ -7,6 +7,7 @@ const { ObjectId } = require('mongodb');
 //kafak
 const {producingKafka} = require('../../../../kafka/producer')
 
+
 const getScores = asyncHandler(async (req, res, next) => {
   const { query } = req;
   const documents = await Score.find()
@@ -49,7 +50,7 @@ const createScore = asyncHandler(async (req, res, next) => {
 
 const kafkaTest = asyncHandler( async(req,res,next)=>{
   
-  await producingKafka('in.txt', 'out.txt', 'master', 'c')
+  producingKafka('in.txt', 'out.txt', 'master', 'c')
   .then((data)=>{console.log(data)})
   .catch((error)=>{console.log(error)});
 

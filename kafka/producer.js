@@ -16,8 +16,8 @@ const producingKafka = (io, option, user, language)=>{
 
     //메세지와 topic이름으로 카프카에 쌓아야할 데이터 정의
     const payloads = [{
-        topic : 'topic1',
-        messages : 'submit example',
+        topic : 'submit',
+        messages,
         partition : 0
     }]; 
 
