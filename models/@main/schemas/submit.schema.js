@@ -40,6 +40,7 @@ const schema = createSchema({
     index: true,
   },
   source: {
+    // https://swjudgeapi.cbnu.ac.kr/uploads/~~~~.c
     type: String,
     required: true,
   },

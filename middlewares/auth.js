@@ -74,15 +74,16 @@ const hasEveryPermissions = (...permissions) => [
 ];
 
 const isAttended = asyncHandler(async (req, res, next) => {
-  const { query } = req;
-  const finded = Problem.find()
-    .where('_id').equal(query.problem)
-    .select('contest')
-  const finded2 = Problm.find()
-    .where('_id').equal(finded)
-    .select('attendedStudents')
-  if (finded2.includes(query.user)) next()
-  else next(FORBIDDEN)
+  next();
+  // const { query } = req;
+  // const finded = Problem.find()
+  //   .where('_id').equal(query.problem)
+  //   .select('contest')
+  // const finded2 = Problm.find()
+  //   .where('_id').equal(finded)
+  //   .select('contestants')
+  // if (finded2.includes(query.user)) next()
+  // else next(FORBIDDEN)
 });
 
 exports.authenticate = authenticate;
