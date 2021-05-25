@@ -75,8 +75,9 @@ const kafkaTest = asyncHandler( async(req,res,next)=>{
   return res.send('ok');
 });
 
-exports.kafkaTest = kafkaTest;
 
+
+exports.kafkaTest = kafkaTest;
 exports.getScores = getScores;
 exports.createScore = createScore;
 exports.kafkaTest = kafkaTest;
