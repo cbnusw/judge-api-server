@@ -6,6 +6,7 @@ const router = Router();
 
 router.get('/', controller.getContests);
 router.get('/me', isAuthenticated, controller.getMyContests);
+router.get('/registered', isAuthenticated, controller.getRegisteredContests);
 router.get('/applying', controller.getApplyingContests);
 router.get('/:id', controller.getContest);
 router.post('/:id/enroll', isAuthenticated, controller.enrollContest);

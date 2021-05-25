@@ -8,11 +8,10 @@ const ioSchema = createSchema({
   outFile: String,  // output file url
 });
 
-
 const optionsSchema = createSchema({
   maxRealTime: { type: Number, required: true },
-  maxMemory: { type: Number, required: true }
-}, false)
+  maxMemory: { type: Number, required: true },
+}, false);
 
 const schema = createSchema({
   title: {
@@ -21,19 +20,19 @@ const schema = createSchema({
     required: true,
     index: true
   },
-  open: {
-    type: Boolean,
-    default: false,
+  openedAt: {
+    type: Date,
     index: true,
+    default: null,
   },
   content: {
     type: String,
     required: true,
   },
-  score: { type: Number, required: true },
   contest: {
     type: Schema.Types.ObjectId,
     ref: 'Contest',
+    index: true,
     default: null,
   },
   ioSet: [ioSchema],

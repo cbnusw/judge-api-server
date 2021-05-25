@@ -30,7 +30,8 @@ const schema = createSchema({
   },
   center: {
     type: String,
-    enum: CENTERS,
+    enum: [...CENTERS, null],
+    default: null
   },
   department: {
     type: String,

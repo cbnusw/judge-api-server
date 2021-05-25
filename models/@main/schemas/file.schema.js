@@ -65,6 +65,7 @@ schema.methods.validatePermission = async function (user) {
       end = new Date(end);
       return now.getTime() >= start.getTime() && now.getTime() <= end.getTime();
     }
+  } else if (this.refModel === 'Submit') {
   }
 
   return true;
