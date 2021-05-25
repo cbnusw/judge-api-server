@@ -8,7 +8,7 @@ const scoreSchema = createSchema({
     type: Schema.Types.ObjectId,
     ref: 'Problem'
   },
-  idCorrect: {
+  isCorrect: {
     type: Boolean,
     default: false,
   },
