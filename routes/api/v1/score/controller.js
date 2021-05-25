@@ -4,6 +4,9 @@ const asyncHandler = require('express-async-handler');
 const { File, Problem, UserInfo } = require('../../../../models/@main');
 const { ObjectId } = require('mongodb');
 
+//kafak
+const {producingKafka} = require('../../../../kafka/producer')
+
 
 const getScores = asyncHandler(async (req, res, next) => {
   const { query } = req;
@@ -45,6 +48,18 @@ const createScore = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, doc));
 });
 
+const kafkaTest = asyncHandler( async(req,res,next)=>{
+  
+  producingKafka('in.txt', 'out.txt', 'master', 'c')
+  .then((data)=>{console.log(data)})
+  .catch((error)=>{console.log(error)});
 
+  return res.send('ok');
+});
+
+
+
+exports.kafkaTest = kafkaTest;
 exports.getScores = getScores;
 exports.createScore = createScore;
+exports.kafkaTest = kafkaTest;
