@@ -3,7 +3,9 @@ const { removeFilesByUrls, updateFiles } = require('../../../../utils/file');
 const asyncHandler = require('express-async-handler');
 const { File, Problem, UserInfo } = require('../../../../models/@main');
 const { ObjectId } = require('mongodb');
-const kafka = require('kafka-node');
+
+//kafak
+const {producingKafka} = require('../../../../kafka/producer')
 
 const getScores = asyncHandler(async (req, res, next) => {
   const { query } = req;
@@ -46,31 +48,10 @@ const createScore = asyncHandler(async (req, res, next) => {
 });
 
 const kafkaTest = asyncHandler( async(req,res,next)=>{
-  let HighLevelProducer = kafka.HighLevelProducer;
-  let Producer = kafka.Producer;
-  let client = new kafka.KafkaClient();
-  let producer = new HighLevelProducer(client);
-
-  const messageInfo  = {
-    option : "hihi",
-    in: "/problems/in.txt",
-    out: "/problems/out.txt"
-  }
-
-  const payloads = [{
-    topic : 'topic1',
-    messages: messageInfo
-  }]
-
-  producer.on('ready', ()=>{
-    producer.send(payloads, (err, data)=>{
-      console.log(data);
-    })
-  })
-
-  producer.on('error', error =>{
-    console.error(error);
-  })
+  
+  await producingKafka('in.txt', 'out.txt', 'master', 'c')
+  .then((data)=>{console.log(data)})
+  .catch((error)=>{console.log(error)});
 
   return res.send('ok');
 });
