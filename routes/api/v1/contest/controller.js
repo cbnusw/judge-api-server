@@ -1,15 +1,17 @@
-const { Contest } = require('../../../../models');
+const { Contest, Problem } = require('../../../../models');
+const { findImageUrlFromHtml, updateFiles } = require('../../../../utils/file');
 const { createResponse } = require('../../../../utils/response');
-const { hasRoles } = require('../../../../utils/permission');
 const asyncHandler = require('express-async-handler');
 const {
-  AFTER_PROGRESS_PERIOD,
-  AFTER_REGISTER_PERIOD,
-  BEFORE_REGISTER_PERIOD,
+  AFTER_APPLYING_PERIOD,
+  AFTER_TEST_START,
+  BEFORE_APPLYING_PERIOD,
   CONTEST_NOT_FOUND,
   CONTEST_ENROLLED,
   FORBIDDEN,
-  PROGRESSED_CONTEST,
+  IS_NOT_CONTEST_PROBLEM,
+  PROBLEM_NOT_FOUND,
+  PROGRESSING_CONTEST,
 } = require('../../../../errors');
 
 
@@ -57,6 +59,53 @@ const getContest = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, doc));
 })
 
+const getContestProblems = asyncHandler(async (req, res, next) => {
+  const { params: { id } } = req;
+
+  const doc = await Contest.findById(id).populate({ path: 'writer' })
+    .populate({ path: 'problems', populate: { path: 'writer' } });
+
+  res.json(createResponse(res, doc));
+});
+
+const createContest = asyncHandler(async (req, res, next) => {
+  const { body, user } = req;
+
+  body.writer = user.info;
+  const urls = findImageUrlFromHtml(body.content);
+  const doc = await Contest.create(body);
+
+  await updateFiles(req, doc._id, 'Contest', urls);
+
+  res.json(createResponse(res, doc));
+});
+
+const createContestProblem = asyncHandler(async (req, res, next) => {
+  const { params: { id }, body, user } = req;
+
+  const contest = await Contest.findById(id);
+
+  if (!contest) return next(CONTEST_NOT_FOUND);
+  if (String(contest.writer) !== String(user.info)) return next(FORBIDDEN);
+
+  const { testPeriod } = contest;
+  const now = new Date();
+  const start = new Date(testPeriod.start);
+  if (now.getTime() > start.getTime()) return next(AFTER_TEST_START);
+
+  body.contest = id;
+  body.writer = user.info;
+
+  const problem = await Problem.create(body);
+
+  const urls = [body.content, ...(body.ioSet || []).map(io => io.inFile), ...(body.ioSet || []).map(io => io.outFile)];
+  contest.problems.push(problem._id);
+
+  await Promise.all([contest.save(), updateFiles(req, problem._id, 'Problem', urls)]);
+
+  res.json(createResponse(res, problem));
+});
+
 const enrollContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, user } = req;
   const contest = await Contest.findById(id);
@@ -71,15 +120,14 @@ const enrollContest = asyncHandler(async (req, res, next) => {
     start = new Date(start);
     end = new Date(end);
 
-    if (now.getTime() < start.getTime()) return next(BEFORE_REGISTER_PERIOD);
-    if (now.getTime > end.getTime()) return next(AFTER_REGISTER_PERIOD);
+    if (now.getTime() < start.getTime()) return next(BEFORE_APPLYING_PERIOD);
+    if (now.getTime > end.getTime()) return next(AFTER_APPLYING_PERIOD);
   }
 
   if (testPeriod) {
     const now = new Date();
-    let { end } = testPeriod;
-    end = new Date(end);
-    if (now.getTime() > end.getTime()) return next(AFTER_PROGRESS_PERIOD);
+    const start = new Date(testPeriod.start);
+    if (now.getTime() > start.getTime()) return next(PROGRESSING_CONTEST);
   }
 
   if (contest.contestants.map(id => String(id)).includes(String(user.info))) return next(CONTEST_ENROLLED);
@@ -102,7 +150,7 @@ const unenrollContest = asyncHandler(async (req, res, next) => {
     let { start } = testPeriod;
     start = new Date(start);
 
-    if (now.getTime() > start.getTime()) return next(PROGRESSED_CONTEST);
+    if (now.getTime() > start.getTime()) return next(PROGRESSING_CONTEST);
   }
 
   const idx = contest.contestants.map(id => String(id)).indexOf(String(user.info));
@@ -113,15 +161,6 @@ const unenrollContest = asyncHandler(async (req, res, next) => {
   return res.json(createResponse(res));
 })
 
-const createContest = asyncHandler(async (req, res, next) => {
-  const { body, user } = req;
-
-  body.writer = user.info;
-  const doc = await Contest.create(body);
-
-  res.json(createResponse(res, doc));
-});
-
 const updateContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, body: $set, user } = req;
 
@@ -130,7 +169,37 @@ const updateContest = asyncHandler(async (req, res, next) => {
   if (!doc) return next(CONTEST_NOT_FOUND);
   if (String(doc.writer) !== String(user.info)) return next(FORBIDDEN);
 
+  if ($set.content) {
+    const urls = findImageUrlFromHtml($set.content);
+    await updateFiles(req, doc._id, 'Content', urls);
+  }
   await doc.updateOne({ $set });
+
+  res.json(createResponse(res));
+});
+
+const updateContestProblem = asyncHandler(async (req, res, next) => {
+  const { params: { id, problemId }, body: $set, user } = req;
+
+  const contest = await Contest.findById(id);
+  const problem = await Problem.findById(problemId);
+
+  if (!contest) return next(CONTEST_NOT_FOUND);
+  if (!problem) return next(PROBLEM_NOT_FOUND);
+
+  if (String(contest.writer) !== String(user.info)) return next(FORBIDDEN);
+  if (String(problem.writer) !== String(user.info)) return next(FORBIDDEN);
+  if (!contest.problems.map(p => String(p)).includes(String(problem._id))) return next(IS_NOT_CONTEST_PROBLEM);
+
+  const { testPeriod } = contest;
+  const now = new Date();
+  const start = new Date(testPeriod.start);
+  if (now.getTime() > start.getTime()) return next(AFTER_TEST_START);
+
+  const urls = [...($set.ioSet || []).map(io => io.inFile), ...($set.ioSet || []).map(io => io.outFile)];
+  if ($set.content) urls.push($set.content);
+
+  await Promise.all([problem.updateOne({ $set }), updateFiles(req, problem._id, 'Problem', urls)]);
 
   res.json(createResponse(res));
 });
@@ -140,7 +209,6 @@ const removeContest = asyncHandler(async (req, res, next) => {
   const doc = await Contest.findById(id);
 
   if (!doc) return next(CONTEST_NOT_FOUND);
-  if (String(doc.writer) !== String(user.info) && !hasRoles()) return next(FORBIDDEN);
 
   await doc.deleteOne();
 
@@ -152,8 +220,11 @@ exports.getMyContests = getMyContests;
 exports.getRegisteredContests = getRegisteredContests;
 exports.getApplyingContests = getApplyingContests;
 exports.getContest = getContest;
+exports.getContestProblems = getContestProblems;
 exports.createContest = createContest;
-exports.updateContest = updateContest;
-exports.removeContest = removeContest;
+exports.createContestProblem = createContestProblem;
 exports.enrollContest = enrollContest;
 exports.unenrollContest = unenrollContest;
+exports.updateContest = updateContest;
+exports.updateContestProblem = updateContestProblem;
+exports.removeContest = removeContest;

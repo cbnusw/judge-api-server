@@ -1,4 +1,5 @@
 const { Schema } = require('mongoose');
+const { hasRole } = require('../../../utils/permission');
 const { createSchema } = require('../../helpers');
 const { FILE_TYPES } = require('../../../constants');
 const schema = createSchema({
@@ -38,7 +39,10 @@ schema.statics.findByUrl = function (url) {
 
 schema.methods.validatePermission = async function (user) {
 
+  if (hasRole(user)) return true;
+
   let userInfo;
+  const now = new Date();
 
   if (user) {
     const { UserInfo } = require('../');
@@ -50,22 +54,34 @@ schema.methods.validatePermission = async function (user) {
     const { Contest, Problem } = require('../');
     const problem = await Problem.findById(this.ref);
 
-    if (!problem.contest) return true;
+    if (!problem) return false;
+    if (userInfo && String(problem.writer) === String(userInfo._id)) return true;
 
-    const contest = await Contest.findById(problem.contest);
+    if (problem.ioSet.map(io => io.inFile).includes(this.url)) return false;
+    if (problem.ioSet.map(io => io.outFile).includes(this.url)) return false;
 
-    if (!contest) return true;
+    if (problem.contest) {
+      const contest = await Contest.findById(problem.contest);
+      if (!contest) return false;
 
-    if (!userInfo) return false;
-    if (contest.contestants.map(id => String(id)).indexOf(String(userInfo._id)) === -1) return false;
-    if (contest.testPeriod) {
-      let { start, end } = contest.testPeriod;
-      const now = new Date();
-      start = new Date(start);
-      end = new Date(end);
-      return now.getTime() >= start.getTime() && now.getTime() <= end.getTime();
+      if (!userInfo) return false;
+      if (!contest.contestants.map(id => String(id)).includes(String(userInfo._id))) return false;
+      if (contest.testPeriod) {
+        let { start, end } = contest.testPeriod;
+        const now = new Date();
+        start = new Date(start);
+        end = new Date(end);
+        return now.getTime() >= start.getTime() && now.getTime() <= end.getTime();
+      }
     }
-  } else if (this.refModel === 'Submit') {
+
+    if (problem.published) {
+      const published = new Date(problem.published);
+      return now.getTime() > published.getTime();
+    }
+
+    return false;
+
   }
 
   return true;

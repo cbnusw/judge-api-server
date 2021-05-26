@@ -1,9 +1,10 @@
+const cheerio = require('cheerio');
+const { promises, existsSync } = require('fs');
+const { sync } = require('mkdirp');
 const multer = require('multer');
 const { join, extname, basename } = require('path');
-const { promises, existsSync } = require('fs');
 const { parse } = require('url');
 const { v4 } = require('uuid');
-const { sync } = require('mkdirp');
 const { ROOT_DIR, UPLOAD_DIR } = require('../env');
 const { File } = require('../models/@main');
 const { hasRoles } = require('./permission');
@@ -34,15 +35,19 @@ const createUpload = (uploadDir = UPLOAD_DIR) => {
 
 const removeFileByUrl = async (req, url, baseDir = UPLOAD_DIR) => {
   const { user } = req;
-  console.log(user, baseDir, getBasename(url), ROOT_DIR);
+
   if (!user) throw LOGIN_REQUIRED;
   if (!url) return;
+
   const file = await File.findOne({ url });
+
   if (!file) return;
   if (!hasRoles(user, 'admin', 'operator') && String(user.info) !== String(file.uploader)) throw FORBIDDEN;
+
   const filePath = join(ROOT_DIR, '/', baseDir, '/', getBasename(url));
-  console.log(filePath);
+
   await Promise.all([file.deleteOne(), promises.unlink(filePath)]);
+
   return filePath
 };
 
@@ -81,6 +86,18 @@ const updateFiles = async (req, ref, refModel, urls) => {
   if (deletions.length > 0) await removeFilesByUrls(req, deletions);
 };
 
+const findImageUrlsFromHtml = html => {
+  const $ = cheerio.load(html || '');
+  const urls = [];
+
+  $('img').each(function () {
+    const url = $(this).attr('src');
+    urls.push(url);
+  });
+
+  return urls;
+};
+
 exports.getBasename = getBasename;
 exports.createUpload = createUpload;
 exports.removeFileByUrl = removeFileByUrl;
@@ -88,3 +105,4 @@ exports.removeFileById = removeFileById;
 exports.removeFilesByUrls = removeFilesByUrls;
 exports.removeFilesByIds = removeFilesByIds;
 exports.updateFiles = updateFiles;
+exports.findImageUrlFromHtml = findImageUrlsFromHtml;

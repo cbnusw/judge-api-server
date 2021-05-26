@@ -16,7 +16,9 @@ const permissions = [
 ];
 
 const fileTypes = [
-  'Problem', 'Submit'
+  'Contest',
+  'Problem',
+  'Submit'
 ];
 
 const programmingLanguages = [

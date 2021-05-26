@@ -15,6 +15,7 @@
   "dependencies": {
     "audit": "^0.0.6",
     "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.9",
     "compression": "^1.7.4",
     "content-disposition": "^0.5.3",
     "cors": "^2.8.5",
