@@ -3,7 +3,7 @@ const { debug ,error } = require('../utils/logger');
 
 const initConsumer = (client, no) => {
   const topics = [{ topic: 'submit', partition: 0 }];
-  const options = { autoCommit: false, fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024, fromOffset: true };
+  const options = { autoCommit: true, fetchMaxWaitMs: 1000, fetchMaxBytes: 1024 * 1024};
   const consumer = new Consumer(client, topics, options);
 
   consumer.on('message', (message) => {
