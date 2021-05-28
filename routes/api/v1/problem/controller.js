@@ -43,7 +43,7 @@ const getProblem = asyncHandler(async (req, res, next) => {
 
 const createSubmit = asyncHandler(async (req, res, next) => {
   const { params: { id }, body, user } = req;
-  const { producer } = req.app.get('properties');
+  const producer = req.app.get('submitProducer');
 
   body.problem = id;
   body.user = user.info;
