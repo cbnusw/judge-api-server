@@ -4,9 +4,19 @@ const { searchPlugin } = require('../../plugins');
 const { toRegEx, toRef } = require('../../mappers');
 
 const ioSchema = createSchema({
-  inFile: String,   // input file url
-  outFile: String,  // output file url
-});
+  // input file url
+  inFile: {
+    type: Schema.Types.ObjectId,
+    ref: 'File',
+    required: true,
+  },
+  // input file url
+  outFile: {
+    type: Schema.Types.ObjectId,
+    ref: 'File',
+    required: true,
+  },
+}, false);
 
 const optionsSchema = createSchema({
   maxRealTime: {
@@ -43,6 +53,10 @@ const schema = createSchema({
   },
   ioSet: [ioSchema],
   options: optionsSchema,
+  score: {
+    type: Number,
+    default: 1,
+  },
   writer: {
     type: Schema.Types.ObjectId,
     ref: 'UserInfo',
@@ -62,6 +76,5 @@ schema.plugin(searchPlugin({
     })
   }
 }));
-
 
 module.exports = schema;

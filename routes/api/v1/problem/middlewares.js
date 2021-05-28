@@ -7,7 +7,7 @@ const handleAccessProblem = asyncHanlder(async (req, res, next) => {
   const { params: { id }, user } = req;
   const problem = await Problem.findById(id);
 
-  if (String(user.info) === String(problem.writer) || hasRole(user)) return next();
+  if (user && String(user.info) === String(problem.writer) || hasRole(user)) return next();
 
   const now = new Date();
 

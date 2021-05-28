@@ -7,7 +7,7 @@ const { parse } = require('url');
 const { v4 } = require('uuid');
 const { ROOT_DIR, UPLOAD_DIR } = require('../env');
 const { File } = require('../models/@main');
-const { hasRoles } = require('./permission');
+const { hasRole } = require('./permission');
 const { difference } = require('./functions')
 const {
   FORBIDDEN,
@@ -42,7 +42,7 @@ const removeFileByUrl = async (req, url, baseDir = UPLOAD_DIR) => {
   const file = await File.findOne({ url });
 
   if (!file) return;
-  if (!hasRoles(user, 'admin', 'operator') && String(user.info) !== String(file.uploader)) throw FORBIDDEN;
+  if (!hasRole(user) && String(user.info) !== String(file.uploader)) throw FORBIDDEN;
 
   const filePath = join(ROOT_DIR, '/', baseDir, '/', getBasename(url));
 
@@ -57,7 +57,7 @@ const removeFileById = async (req, id, baseDir = UPLOAD_DIR) => {
   if (!id) return;
   const file = await File.findById(id);
   if (!file) return;
-  if (!hasRoles(user, 'admin', 'operator') && String(user.info) !== String(file.uploader)) throw FORBIDDEN;
+  if (!hasRole(user) && String(user.info) !== String(file.uploader)) throw FORBIDDEN;
   const filePath = join(ROOT_DIR, '/', baseDir, '/', getBasename(file.url));
   await Promise.all([file.deleteOne(), promises.unlink(filePath)]);
   return filePath
@@ -67,23 +67,37 @@ const removeFilesByUrls = async (req, urls, baseDir = UPLOAD_DIR) => await Promi
 
 const removeFilesByIds = async (req, ids, baseDir = UPLOAD_DIR) => await Promise.all(ids.map(id => removeFileById(req, id, baseDir)));
 
-const updateFiles = async (req, ref, refModel, urls) => {
+const updateFilesByUrls = async (req, ref, refModel, urls) => {
   const { user } = req;
   const files = await File.find({ ref, refModel });
 
-  if (!hasRoles(user, 'admin', 'staff') && files.some(file => String(user.info) !== String(file.uploader)))
+  if (!hasRole(user) && files.some(file => String(user.info) !== String(file.uploader)))
     throw FORBIDDEN;
 
   const inDB = files.map(file => file.url);
   const deletions = difference(inDB, urls);
   const additions = difference(urls, inDB);
 
-  console.log(additions);
-  console.log(deletions);
-  console.log(File);
-
   if (additions.length > 0) await File.updateMany({ url: { $in: additions } }, { $set: { ref, refModel } });
   if (deletions.length > 0) await removeFilesByUrls(req, deletions);
+};
+
+const updateFilesByIds = async (req, ref, refModel, ids) => {
+  const { user } = req;
+  const files = await File.find({ ref, refModel });
+  {
+    if (!hasRole(user) && files.some(file => String(user.info) !== String(file.uploader))) {
+      throw FORBIDDEN;
+    }
+  }
+
+  ids = ids.map(id => String(id));
+  const inDB = files.map(file => String(file._id));
+  const deletions = difference(inDB, ids);
+  const additions = difference(ids, inDB);
+
+  if (additions.length > 0) await File.updateMany({ _id: { $in: additions } }, { $set: { ref, refModel } });
+  if (deletions.length > 0) await removeFilesByIds(req, deletions);
 };
 
 const findImageUrlsFromHtml = html => {
@@ -104,5 +118,6 @@ exports.removeFileByUrl = removeFileByUrl;
 exports.removeFileById = removeFileById;
 exports.removeFilesByUrls = removeFilesByUrls;
 exports.removeFilesByIds = removeFilesByIds;
-exports.updateFiles = updateFiles;
+exports.updateFilesByUrls = updateFilesByUrls;
+exports.updateFilesByIds = updateFilesByIds;
 exports.findImageUrlFromHtml = findImageUrlsFromHtml;

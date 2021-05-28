@@ -1,5 +1,5 @@
 const { createResponse } = require('../../../../utils/response');
-const { removeFilesByUrls, updateFiles } = require('../../../../utils/file');
+const { removeFilesByUrls, updateFilesByUrls } = require('../../../../utils/file');
 const asyncHandler = require('express-async-handler');
 const { File, Problem, UserInfo } = require('../../../../models/@main');
 const { ObjectId } = require('mongodb');

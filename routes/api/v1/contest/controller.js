@@ -1,5 +1,5 @@
 const { Contest, Problem } = require('../../../../models');
-const { findImageUrlFromHtml, updateFiles } = require('../../../../utils/file');
+const { findImageUrlFromHtml, updateFilesByUrls } = require('../../../../utils/file');
 const { createResponse } = require('../../../../utils/response');
 const asyncHandler = require('express-async-handler');
 const {
@@ -21,17 +21,26 @@ const getContests = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, documents));
 });
 
+
 const getMyContests = asyncHandler(async (req, res, next) => {
   const { query, user } = req;
   const documents = await Contest.search(query, { writer: user.info });
   res.json(createResponse(res, documents));
 });
 
+
 const getRegisteredContests = asyncHandler(async (req, res, next) => {
   const { query, user } = req;
-  const documents = await Contest.search(query, { contestants: user.info });
+  const now = new Date();
+  const documents = await Contest.search(query, {
+    $and: [
+      { contestants: user.info },
+      { 'testPeriod.start': { $gt: now } }
+    ]
+  });
   res.json(createResponse(res, documents));
 });
+
 
 const getApplyingContests = asyncHandler(async (req, res, next) => {
   const now = new Date();
@@ -47,6 +56,17 @@ const getApplyingContests = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, documents));
 });
 
+const getProgressingContests = asyncHandler(async (req, res, next) => {
+  const now = new Date();
+
+  const documents = await Contest.search({}, {
+    'testPeriod.end': { $gt: now }
+  });
+
+  res.json(createResponse(res, documents));
+});
+
+
 const getContest = asyncHandler(async (req, res, next) => {
   const { params: { id } } = req;
 
@@ -59,14 +79,25 @@ const getContest = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res, doc));
 })
 
-const getContestProblems = asyncHandler(async (req, res, next) => {
-  const { params: { id } } = req;
 
-  const doc = await Contest.findById(id).populate({ path: 'writer' })
+const getContestProblems = asyncHandler(async (req, res, next) => {
+  const { params: { id }, user } = req;
+
+  const contest = await Contest.findById(id);
+  if (!contest) return next(CONTEST_NOT_FOUND);
+
+  const query = Contest.findById(id).populate({ path: 'writer' })
     .populate({ path: 'problems', populate: { path: 'writer' } });
+
+  if (String(contest.writer) === String(user.info)) {
+    query.populate({ path: 'problems' });
+  }
+
+  const doc = await query.exec();
 
   res.json(createResponse(res, doc));
 });
+
 
 const createContest = asyncHandler(async (req, res, next) => {
   const { body, user } = req;
@@ -75,10 +106,11 @@ const createContest = asyncHandler(async (req, res, next) => {
   const urls = findImageUrlFromHtml(body.content);
   const doc = await Contest.create(body);
 
-  await updateFiles(req, doc._id, 'Contest', urls);
+  await updateFilesByUrls(req, doc._id, 'Contest', urls);
 
   res.json(createResponse(res, doc));
 });
+
 
 const createContestProblem = asyncHandler(async (req, res, next) => {
   const { params: { id }, body, user } = req;
@@ -101,10 +133,11 @@ const createContestProblem = asyncHandler(async (req, res, next) => {
   const urls = [body.content, ...(body.ioSet || []).map(io => io.inFile), ...(body.ioSet || []).map(io => io.outFile)];
   contest.problems.push(problem._id);
 
-  await Promise.all([contest.save(), updateFiles(req, problem._id, 'Problem', urls)]);
+  await Promise.all([contest.save(), updateFilesByUrls(req, problem._id, 'Problem', urls)]);
 
   res.json(createResponse(res, problem));
 });
+
 
 const enrollContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, user } = req;
@@ -137,6 +170,7 @@ const enrollContest = asyncHandler(async (req, res, next) => {
   return res.json(createResponse(res));
 })
 
+
 const unenrollContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, user } = req;
   const contest = await Contest.findById(id);
@@ -161,6 +195,7 @@ const unenrollContest = asyncHandler(async (req, res, next) => {
   return res.json(createResponse(res));
 })
 
+
 const updateContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, body: $set, user } = req;
 
@@ -171,12 +206,13 @@ const updateContest = asyncHandler(async (req, res, next) => {
 
   if ($set.content) {
     const urls = findImageUrlFromHtml($set.content);
-    await updateFiles(req, doc._id, 'Content', urls);
+    await updateFilesByUrls(req, doc._id, 'Content', urls);
   }
   await doc.updateOne({ $set });
 
   res.json(createResponse(res));
 });
+
 
 const updateContestProblem = asyncHandler(async (req, res, next) => {
   const { params: { id, problemId }, body: $set, user } = req;
@@ -199,10 +235,25 @@ const updateContestProblem = asyncHandler(async (req, res, next) => {
   const urls = [...($set.ioSet || []).map(io => io.inFile), ...($set.ioSet || []).map(io => io.outFile)];
   if ($set.content) urls.push($set.content);
 
-  await Promise.all([problem.updateOne({ $set }), updateFiles(req, problem._id, 'Problem', urls)]);
+  await Promise.all([problem.updateOne({ $set }), updateFilesByUrls(req, problem._id, 'Problem', urls)]);
 
   res.json(createResponse(res));
 });
+
+const reorderContestProblems = asyncHandler(async (req, res, next) => {
+  let { params: { id }, body: { problems }, user } = req;
+
+  const contest = await Contest.findById(id);
+
+  if (!contest) return next(CONTEST_NOT_FOUND);
+  if (String(contest.writer) !== String(user.info)) return next(FORBIDDEN);
+
+  problems = problems.map(problem => problem._id);
+  await contest.updateOne({ $set: { problems } });
+
+  res.json(createResponse(res));
+});
+
 
 const removeContest = asyncHandler(async (req, res, next) => {
   const { params: { id }, user } = req;
@@ -215,10 +266,12 @@ const removeContest = asyncHandler(async (req, res, next) => {
   res.json(createResponse(res));
 });
 
+
 exports.getContests = getContests;
 exports.getMyContests = getMyContests;
 exports.getRegisteredContests = getRegisteredContests;
 exports.getApplyingContests = getApplyingContests;
+exports.getProgressingContests = getProgressingContests;
 exports.getContest = getContest;
 exports.getContestProblems = getContestProblems;
 exports.createContest = createContest;
@@ -227,4 +280,5 @@ exports.enrollContest = enrollContest;
 exports.unenrollContest = unenrollContest;
 exports.updateContest = updateContest;
 exports.updateContestProblem = updateContestProblem;
+exports.reorderContestProblems = reorderContestProblems;
 exports.removeContest = removeContest;

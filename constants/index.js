@@ -29,7 +29,15 @@ const programmingLanguages = [
   'python3',
   'kotlin',
   'go',
-  'node',
+];
+
+const submitResults = [
+  'compile',
+  'runtime',
+  'timeout',
+  'memory',
+  'wrong',
+  'done'
 ];
 
 const centers = [
@@ -49,3 +57,4 @@ exports.PERMISSIONS = permissions;
 exports.CENTERS = centers;
 exports.FILE_TYPES = fileTypes;
 exports.PROGRAMMING_LANGUAGES = programmingLanguages;
+exports.SUBMIT_RESULTS = submitResults;

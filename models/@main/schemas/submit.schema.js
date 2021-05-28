@@ -2,12 +2,12 @@ const { Schema } = require('mongoose');
 const { createSchema } = require('../../helpers');
 const { searchPlugin } = require('../../plugins');
 const { toRegEx, toRef } = require('../../mappers');
-const { PROGRAMMING_LANGUAGES } = require('../../../constants');
+const { PROGRAMMING_LANGUAGES, SUBMIT_RESULTS } = require('../../../constants');
 
 const resultSchema = createSchema({
   type: {
     type: String,
-    enum: ['compile', 'runtime', 'timeout', 'memory', 'done'],
+    enum: SUBMIT_RESULTS,
   },
   // done일 경우
   memory: {
@@ -53,7 +53,6 @@ const schema = createSchema({
     type: resultSchema,
     default: null,
   }
-
 }, {
   updatedAt: false,
 });

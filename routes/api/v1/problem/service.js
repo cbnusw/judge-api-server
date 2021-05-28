@@ -1,12 +1,10 @@
-const { Producer, KafkaClient } = require('kafka-node');
-const client = new KafkaClient();
-const producer = new Producer(client);
+const { KAFKA_SUBMIT_TOPIC: topic } = require('../../../../env');
 
 
 exports.producingSubmit = (producer, submitId) => {
 
   const payloads = [{
-    topic: 'submit',
+    topic,
     messages: submitId
   }];
 
