@@ -41,7 +41,6 @@ schema.index({ createdAt: -1 });
 schema.index({ contest: 1, user: 1 }, { unique: true });
 
 schema.plugin(searchPlugin({
-  sort: '-score',
   mapper: {
     title: toRegEx,
     user: toRef('UserInfo', {
