@@ -57,10 +57,15 @@ const schema = createSchema({
   updatedAt: false,
 });
 
-schema.index({ createdAt: 1 });
+schema.index({ createdAt: -1 });
 
 schema.plugin(searchPlugin({
-  sort: '-score',
+  sort: '-createdAt',
+  populate: [
+    { path: 'contest', select: 'title' },
+    { path: 'problem', select: 'title' },
+    { path: 'user', select: 'name' }
+  ],
   mapper: {
     title: toRegEx,
     user: toRef('UserInfo', {
