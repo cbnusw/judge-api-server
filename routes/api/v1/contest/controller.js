@@ -35,7 +35,7 @@ const getRegisteredContests = asyncHandler(async (req, res, next) => {
   const documents = await Contest.search(query, {
     $and: [
       { contestants: user.info },
-      { 'testPeriod.start': { $gt: now } }
+      { 'testPeriod.end': { $lte: now } }
     ]
   });
   res.json(createResponse(res, documents));
