@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { authenticate, isOperator } = require('../../middlewares/auth');
+const { authenticate, isAuthenticated, isOperator } = require('../../middlewares/auth');
 const { createUpload } = require('../../utils/file');
 const controller = require('./controller');
 
