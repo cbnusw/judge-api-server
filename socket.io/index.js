@@ -1,10 +1,16 @@
 const socketIo = require('socket.io');
 const { debug } = require('../utils/logger');
+const { JUDGE_WEB_HOST } = require('../env');
 // const { readdirSync, statSync } = require('fs');
 // const { join } = require('path');
 
 module.exports = (httpServer, app) => {
-  const io = socketIo(httpServer);
+  const io = socketIo(httpServer, {
+    cors: {
+      origin: JUDGE_WEB_HOST,
+      methods: ["GET", "POST"]
+    }
+  });
   app.set('io', io);
 
   io.on('connection', socket => {
