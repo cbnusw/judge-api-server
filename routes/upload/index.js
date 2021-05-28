@@ -11,7 +11,7 @@ router.get('/:id/download', authenticate, controller.download);
 
 router.post(
   '/',
-  ...isOperator,
+  isAuthenticated,
   upload.single('upload'),
   controller.uploadMiddleware,
   controller.upload
