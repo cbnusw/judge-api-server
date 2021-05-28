@@ -32,7 +32,7 @@ const getProblemSubmits = asyncHandler(async (req, res, next) => {
 });
 
 const getMyProblemSubmits = asyncHandler(async (req, res, next) => {
-  const { params: { id } } = req;
+  const { params: { id }, user } = req;
   const documents = await Submit.search({ limit: 100 }, { problem: id, user: user.info });
   res.json(createResponse(res, documents));
 });
