@@ -19,10 +19,11 @@ const initConsumer = io => {
 
     try {
       const submitResult = await Submit.findById(id);
+      const { contest, user, problem, result, createdAt } = submitResult;
       const contestDoc = await Contest.findById(contest);
+
       if (!contestDoc) throw CONTEST_NOT_FOUND;
 
-      const { contest, user, problem, result, createdAt } = submitResult;
       const { testPeriod } = contestDoc;
       const start = new Date(testPeriod.start);
       const submittedAt = new Date(createdAt);
