@@ -25,13 +25,16 @@ async function run() {
       const problems = contestDoc.problems;
       scoreBoard = await ScoreBoard.create({ contest, user, scores: problems.map(problem => ({ problem })) });
     }
+
     const score = scoreBoard.scores.find(s => s.problem === problem);
 
-    score.right = result.type === 'done';
-    score.tries++;
-    score.time = Math.floor((submittedAt.getTime() - start.getTime()) / 60000);
+    if (score) {
+      score.right = result.type === 'done';
+      score.tries++;
+      score.time = Math.floor((submittedAt.getTime() - start.getTime()) / 60000);
 
-    await scoreBoard.save();
+      await scoreBoard.save();
+    }
   }
 }
 
