@@ -1,7 +1,7 @@
 const { Submit, ScoreBoard, Contest } = require('../models');
 
 async function run() {
-  const submits = await Submit.find({}).sort('-createdAt');
+  const submits = await Submit.find({}).sort('createdAt');
 
   const rightProblems = {};
 
