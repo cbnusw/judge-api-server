@@ -3,6 +3,8 @@ const { Submit, ScoreBoard, Contest } = require('../models');
 async function run() {
   const submits = await Submit.find({}).sort('-createdAt');
 
+  const rightProblems = {};
+
   for (let submit of submits) {
     const { contest, user, problem, result, createdAt } = submit;
     const contestDoc = await Contest.findById(contest);
@@ -29,14 +31,16 @@ async function run() {
     const score = scoreBoard.scores.find(s => String(s.problem) === String(problem));
 
     if (score) {
-      console.log('RESULT:::', result);
       score.right = result.type === 'done';
       score.tries++;
       score.time = Math.floor((submittedAt.getTime() - start.getTime()) / 60000);
 
+      rightProblems[String(problem)] = (rightProblems[String(problem)] || 0) + 1;
       await scoreBoard.save();
     }
   }
+
+  console.log(rightProblems);
 }
 
 run()
