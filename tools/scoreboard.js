@@ -29,6 +29,7 @@ async function run() {
     const score = scoreBoard.scores.find(s => s.problem === problem);
 
     if (score) {
+      console.log(result.type);
       score.right = result.type === 'done';
       score.tries++;
       score.time = Math.floor((submittedAt.getTime() - start.getTime()) / 60000);
