@@ -35,7 +35,9 @@ async function run() {
       score.tries++;
       score.time = Math.floor((submittedAt.getTime() - start.getTime()) / 60000);
 
-      rightProblems[String(problem)] = (rightProblems[String(problem)] || 0) + 1;
+      if (score.right) {
+        rightProblems[String(problem)] = (rightProblems[String(problem)] || 0) + 1;
+      }
       await scoreBoard.save();
     }
   }
